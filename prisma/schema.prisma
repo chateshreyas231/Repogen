@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  comments  ReportComment[]
+  highlights ReportHighlight[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  metadata  String?  // JSON object for additional metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  resources ProjectResource[]
+  reports   Report[]
+}
+
+model ProjectResource {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type      String   // text, pdf, image, table, link, media
+  title     String?
+  content   String   // text content or file path
+  metadata  String?  // JSON object for additional metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Report {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  nodes     ReportNode[]
+  comments  ReportComment[]
+  highlights ReportHighlight[]
+}
+
+model ReportNode {
+  id                String   @id @default(cuid())
+  reportId          String
+  report            Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  type              String   // section, sub_section, content, prompt, table, diagram, media
+  positionX         Float    // React Flow x position
+  positionY         Float    // React Flow y position
+  data              String   // JSON: { title, content, prompt, etc. }
+  parentNodeId      String?
+  parentNode        ReportNode? @relation("NodeHierarchy", fields: [parentNodeId], references: [id], onDelete: Cascade)
+  childNodes        ReportNode[] @relation("NodeHierarchy")
+  order             Int
+  aiGenerated       Boolean  @default(false)
+  linkedResourceIds String?  // JSON array of ProjectResource IDs
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  comments          ReportComment[]
+  highlights        ReportHighlight[]
+}
+
+model ReportComment {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  nodeId    String?
+  node      ReportNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  position  String?  // JSON: { start: number, end: number } for text selection
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ReportHighlight {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  nodeId    String?
+  node      ReportNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  color     String   // hex color code
+  position  String   // JSON: { start: number, end: number } for text selection
+  note      String?  // optional note for the highlight
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
