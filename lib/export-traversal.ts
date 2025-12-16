@@ -8,6 +8,10 @@ import type {
   TableNodeData,
   DiagramNodeData,
   MediaNodeData,
+  ChecklistNodeData,
+  ChartNodeData,
+  ReferenceNodeData,
+  SignatureNodeData,
   ExportBlock,
   ExportReport,
 } from "@/types/report-nodes"
@@ -62,6 +66,22 @@ function isMediaNode(n: RFNode): n is RFNode & { data: MediaNodeData } {
   return n.data.nodeType === "media"
 }
 
+function isChecklistNode(n: RFNode): n is RFNode & { data: ChecklistNodeData } {
+  return n.data.nodeType === "checklist"
+}
+
+function isChartNode(n: RFNode): n is RFNode & { data: ChartNodeData } {
+  return n.data.nodeType === "chart"
+}
+
+function isReferenceNode(n: RFNode): n is RFNode & { data: ReferenceNodeData } {
+  return n.data.nodeType === "reference"
+}
+
+function isSignatureNode(n: RFNode): n is RFNode & { data: SignatureNodeData } {
+  return n.data.nodeType === "signature"
+}
+
 // Recursive traversal
 function traverseNodeChildren(
   nodes: RFNode[],
@@ -103,6 +123,59 @@ function traverseNodeChildren(
         type: "media",
         media: data,
       })
+    } else if (isChecklistNode(node)) {
+      // Export checklist as a table or formatted list
+      const checklistData = data as ChecklistNodeData
+      blocks.push({
+        type: "heading",
+        level: headingLevel,
+        text: checklistData.title,
+      })
+      // Convert checklist items to paragraphs
+      checklistData.items.forEach((item) => {
+        blocks.push({
+          type: "paragraph",
+          text: `${item.checked ? "✓" : "☐"} ${item.text}${item.comment ? ` (${item.comment})` : ""}`,
+        })
+      })
+    } else if (isChartNode(node)) {
+      // Export chart as a heading with note
+      const chartData = data as ChartNodeData
+      blocks.push({
+        type: "heading",
+        level: headingLevel,
+        text: chartData.title || "Chart",
+      })
+      blocks.push({
+        type: "paragraph",
+        text: `[Chart: ${chartData.chartType} chart - data visualization]`,
+      })
+    } else if (isReferenceNode(node)) {
+      // Export reference as formatted citation
+      const refData = data as ReferenceNodeData
+      blocks.push({
+        type: "paragraph",
+        text: `${refData.standard ? `[${refData.standard}] ` : ""}${refData.citation}${refData.url ? ` (${refData.url})` : ""}`,
+      })
+    } else if (isSignatureNode(node)) {
+      // Export signature as formatted block
+      const sigData = data as SignatureNodeData
+      blocks.push({
+        type: "heading",
+        level: headingLevel,
+        text: sigData.title,
+      })
+      if (sigData.status === "signed" && sigData.signerName) {
+        blocks.push({
+          type: "paragraph",
+          text: `Signed by: ${sigData.signerName}${sigData.signerTitle ? `, ${sigData.signerTitle}` : ""}${sigData.signedAt ? ` on ${new Date(sigData.signedAt).toLocaleDateString()}` : ""}`,
+        })
+      } else {
+        blocks.push({
+          type: "paragraph",
+          text: "Status: Pending signature",
+        })
+      }
     } else if (data.nodeType === "prompt") {
       // PromptNode itself is not exported; its output lives in linked ContentNodes
       continue

@@ -24,6 +24,10 @@ import {
   Download,
   File,
   ChevronRight,
+  CheckSquare,
+  BarChart3,
+  BookOpen,
+  PenTool,
 } from 'lucide-react'
 
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false })
@@ -898,7 +902,8 @@ export function ReportPreview({ reportId }: { reportId: string }) {
           style={{ marginLeft: `${depth * 20}px` }}
         >
           <div className="flex items-center justify-between mb-2">
-            <div className="font-semibold text-red-700">
+            <div className="font-semibold text-red-700 flex items-center gap-2">
+              <GitBranch className="h-4 w-4" />
               {nodeData.title || 'Diagram'}
             </div>
             <Button
@@ -912,6 +917,155 @@ export function ReportPreview({ reportId }: { reportId: string }) {
           </div>
           <div className="text-sm text-muted-foreground">
             Diagram content (preview coming soon)
+          </div>
+        </div>
+      )
+    } else if (node.type === 'checklist') {
+      const checklistItems = nodeData.items || []
+      return (
+        <div
+          key={node.id}
+          className="mb-3 p-3 border rounded bg-green-50"
+          style={{ marginLeft: `${depth * 20}px` }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-semibold text-green-700 flex items-center gap-2">
+              <CheckSquare className="h-4 w-4" />
+              {nodeData.title || 'Checklist'}
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleDeleteNode(node.id)}
+              title="Delete checklist"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {checklistItems.map((item: any) => (
+              <div key={item.id} className="flex items-start gap-2 text-sm">
+                <span>{item.checked ? '✓' : '☐'}</span>
+                <span className={item.checked ? 'line-through text-muted-foreground' : ''}>
+                  {item.text}
+                </span>
+                {item.comment && (
+                  <span className="text-xs text-muted-foreground">({item.comment})</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    } else if (node.type === 'chart') {
+      return (
+        <div
+          key={node.id}
+          className="mb-3 p-3 border rounded bg-blue-50"
+          style={{ marginLeft: `${depth * 20}px` }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-semibold text-blue-700 flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              {nodeData.title || 'Chart'}
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleDeleteNode(node.id)}
+              title="Delete chart"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Chart: {nodeData.chartType || 'bar'} chart (data visualization)
+          </div>
+        </div>
+      )
+    } else if (node.type === 'reference') {
+      return (
+        <div
+          key={node.id}
+          className="mb-3 p-3 border rounded bg-purple-50"
+          style={{ marginLeft: `${depth * 20}px` }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-semibold text-purple-700 flex items-center gap-2">
+              <BookOpen className="h-4 w-4" />
+              {nodeData.title || 'Reference'}
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleDeleteNode(node.id)}
+              title="Delete reference"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="text-sm space-y-1">
+            {nodeData.standard && (
+              <div className="font-medium">Standard: {nodeData.standard}</div>
+            )}
+            <div>{nodeData.citation || 'No citation provided'}</div>
+            {nodeData.url && (
+              <a
+                href={nodeData.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary hover:underline text-xs"
+              >
+                {nodeData.url}
+              </a>
+            )}
+          </div>
+        </div>
+      )
+    } else if (node.type === 'signature') {
+      return (
+        <div
+          key={node.id}
+          className="mb-3 p-3 border rounded bg-red-50"
+          style={{ marginLeft: `${depth * 20}px` }}
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-semibold text-red-700 flex items-center gap-2">
+              <PenTool className="h-4 w-4" />
+              {nodeData.title || 'Signature'}
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => handleDeleteNode(node.id)}
+              title="Delete signature"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="text-sm space-y-1">
+            <div className="flex items-center gap-2">
+              <span className={`px-2 py-1 rounded text-xs ${
+                nodeData.status === 'signed' ? 'bg-green-100 text-green-700' :
+                nodeData.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                'bg-yellow-100 text-yellow-700'
+              }`}>
+                {nodeData.status || 'pending'}
+              </span>
+            </div>
+            {nodeData.signerName && (
+              <div>
+                <div className="font-medium">{nodeData.signerName}</div>
+                {nodeData.signerTitle && (
+                  <div className="text-xs text-muted-foreground">{nodeData.signerTitle}</div>
+                )}
+              </div>
+            )}
+            {nodeData.signedAt && (
+              <div className="text-xs text-muted-foreground">
+                Signed: {new Date(nodeData.signedAt).toLocaleDateString()}
+              </div>
+            )}
           </div>
         </div>
       )

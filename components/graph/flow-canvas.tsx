@@ -25,6 +25,10 @@ import { TableNode } from './nodes/table-node'
 import { DiagramNode } from './nodes/diagram-node'
 import { StartNode } from './nodes/start-node'
 import { EndNode } from './nodes/end-node'
+import { ChecklistNode } from './nodes/checklist-node'
+import { ChartNode } from './nodes/chart-node'
+import { ReferenceNode } from './nodes/reference-node'
+import { SignatureNode } from './nodes/signature-node'
 import { NodeAddDialog } from './node-add-dialog'
 
 const nodeTypes: NodeTypes = {
@@ -34,6 +38,10 @@ const nodeTypes: NodeTypes = {
   prompt: PromptNode,
   table: TableNode,
   diagram: DiagramNode,
+  checklist: ChecklistNode,
+  chart: ChartNode,
+  reference: ReferenceNode,
+  signature: SignatureNode,
   start: StartNode,
   end: EndNode,
 }
@@ -41,15 +49,55 @@ const nodeTypes: NodeTypes = {
 function FlowCanvasInner({
   reportId,
   resources,
+  selectedNodeId,
+  onNodeSelect,
 }: {
   reportId: string
   resources: any[]
+  selectedNodeId?: string | null
+  onNodeSelect?: (nodeId: string) => void
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [loading, setLoading] = useState(true)
   const reactFlowInstance = useReactFlow()
   const nodeIdToDeleteRef = useRef<string | null>(null)
+
+  // Handle node selection from outline panel
+  useEffect(() => {
+    const handleSelectNode = (event: CustomEvent) => {
+      const { nodeId } = event.detail
+      if (onNodeSelect) {
+        onNodeSelect(nodeId)
+      }
+      // Scroll to node in canvas
+      const node = nodes.find((n) => n.id === nodeId)
+      if (node) {
+        reactFlowInstance.setCenter(node.position.x, node.position.y, { zoom: 1, duration: 300 })
+        // Highlight node
+        setNodes((nds) =>
+          nds.map((n) => ({
+            ...n,
+            selected: n.id === nodeId,
+          }))
+        )
+      }
+    }
+    window.addEventListener('select-node', handleSelectNode as EventListener)
+    return () => window.removeEventListener('select-node', handleSelectNode as EventListener)
+  }, [nodes, reactFlowInstance, onNodeSelect, setNodes])
+
+  // Update node selection when selectedNodeId prop changes
+  useEffect(() => {
+    if (selectedNodeId !== undefined) {
+      setNodes((nds) =>
+        nds.map((n) => ({
+          ...n,
+          selected: n.id === selectedNodeId,
+        }))
+      )
+    }
+  }, [selectedNodeId, setNodes])
   
   // Store resources in a way nodes can access
   useEffect(() => {
@@ -696,13 +744,22 @@ function FlowCanvasInner({
 export function FlowCanvas({
   reportId,
   resources,
+  selectedNodeId,
+  onNodeSelect,
 }: {
   reportId: string
   resources: any[]
+  selectedNodeId?: string | null
+  onNodeSelect?: (nodeId: string) => void
 }) {
   return (
     <ReactFlowProvider>
-      <FlowCanvasInner reportId={reportId} resources={resources} />
+      <FlowCanvasInner 
+        reportId={reportId} 
+        resources={resources}
+        selectedNodeId={selectedNodeId}
+        onNodeSelect={onNodeSelect}
+      />
     </ReactFlowProvider>
   )
 }
@@ -743,7 +800,10 @@ function NodeAddMenu({
           + Add Node
         </button>
         {showMenu && (
-          <div className="absolute top-full left-0 mt-2 w-48 bg-background border rounded-md shadow-lg z-20">
+          <div className="absolute top-full left-0 mt-2 w-56 bg-background border rounded-md shadow-lg z-20 max-h-96 overflow-y-auto">
+            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase">
+              Structure
+            </div>
             <button
               onClick={() => handleAdd('section')}
               className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
@@ -756,6 +816,9 @@ function NodeAddMenu({
             >
               Sub-Section
             </button>
+            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase mt-2">
+              Content
+            </div>
             <button
               onClick={() => handleAdd('content')}
               className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
@@ -768,6 +831,9 @@ function NodeAddMenu({
             >
               Prompt
             </button>
+            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase mt-2">
+              Data & Media
+            </div>
             <button
               onClick={() => handleAdd('table')}
               className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
@@ -779,6 +845,33 @@ function NodeAddMenu({
               className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
             >
               Diagram
+            </button>
+            <button
+              onClick={() => handleAdd('checklist')}
+              className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
+            >
+              Checklist
+            </button>
+            <button
+              onClick={() => handleAdd('chart')}
+              className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
+            >
+              Chart
+            </button>
+            <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase mt-2">
+              References & Approval
+            </div>
+            <button
+              onClick={() => handleAdd('reference')}
+              className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
+            >
+              Reference
+            </button>
+            <button
+              onClick={() => handleAdd('signature')}
+              className="w-full text-left px-4 py-2 hover:bg-accent text-sm"
+            >
+              Signature
             </button>
           </div>
         )}

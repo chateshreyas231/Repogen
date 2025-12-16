@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { TemplateSelector } from '@/components/graph/template-selector'
+import { reportTemplates, type ReportTemplate } from '@/lib/templates'
 
 interface Report {
   id: string
@@ -24,26 +26,42 @@ export function ProjectReports({
 }) {
   const router = useRouter()
   const [reports, setReports] = useState(initialReports)
-  const [newReportTitle, setNewReportTitle] = useState('')
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  const handleCreateReport = async () => {
-    if (!newReportTitle.trim()) return
-
+  const handleSelectTemplate = async (template: ReportTemplate) => {
+    setShowTemplateSelector(false)
     setLoading(true)
+    
     try {
-      const response = await fetch('/api/reports', {
+      // Create report with title
+      const reportResponse = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId,
-          title: newReportTitle,
+          title: template.name,
         }),
       })
 
-      if (response.ok) {
-        const newReport = await response.json()
-        router.push(`/reports/${newReport.id}`)
+      if (reportResponse.ok) {
+        const newReport = await reportResponse.json()
+        
+        // Apply template to the report
+        const templateResponse = await fetch(`/api/reports/${newReport.id}/apply-template`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            templateId: template.id,
+          }),
+        })
+
+        if (templateResponse.ok) {
+          router.push(`/reports/${newReport.id}`)
+        } else {
+          // Report created but template failed - still navigate
+          router.push(`/reports/${newReport.id}`)
+        }
       }
     } catch (err) {
       console.error('Error creating report:', err)
@@ -61,17 +79,13 @@ export function ProjectReports({
       </CardHeader>
       <CardContent>
         <div className="space-y-4 mb-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="New report title..."
-              value={newReportTitle}
-              onChange={(e) => setNewReportTitle(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleCreateReport()}
-            />
-            <Button onClick={handleCreateReport} disabled={loading || !newReportTitle.trim()}>
-              {loading ? 'Creating...' : 'New Report'}
-            </Button>
-          </div>
+          <Button 
+            onClick={() => setShowTemplateSelector(true)} 
+            disabled={loading}
+            className="w-full"
+          >
+            {loading ? 'Creating...' : '+ New Report from Template'}
+          </Button>
         </div>
         <div className="space-y-3">
           {reports.length === 0 ? (
@@ -99,6 +113,12 @@ export function ProjectReports({
           )}
         </div>
       </CardContent>
+      {showTemplateSelector && (
+        <TemplateSelector
+          onSelectTemplate={handleSelectTemplate}
+          onCancel={() => setShowTemplateSelector(false)}
+        />
+      )}
     </Card>
   )
 }

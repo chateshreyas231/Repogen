@@ -59,7 +59,7 @@ model ReportNode {
   id                String   @id @default(cuid())
   reportId          String
   report            Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  type              String   // section, sub_section, content, prompt, table, diagram, media
+  type              String   // section, sub_section, content, prompt, table, diagram, media, checklist, chart, reference, signature
   positionX         Float    // React Flow x position
   positionY         Float    // React Flow y position
   data              String   // JSON: { title, content, prompt, etc. }
@@ -69,6 +69,11 @@ model ReportNode {
   order             Int
   aiGenerated       Boolean  @default(false)
   linkedResourceIds String?  // JSON array of ProjectResource IDs
+  collapsed         Boolean  @default(false) // For hierarchical collapse/expand
+  status            String?  // draft, complete, in_review, approved
+  assignedTo        String?  // User ID
+  dueDate           DateTime?
+  metadata          String?  // JSON: { description, tags, references, etc. }
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   comments          ReportComment[]

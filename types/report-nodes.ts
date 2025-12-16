@@ -8,6 +8,10 @@ export type ReportNodeType =
   | "table"
   | "diagram"
   | "media"
+  | "checklist"
+  | "chart"
+  | "reference"
+  | "signature"
 
 export type AiStatus = "none" | "pending" | "aiGenerated" | "edited"
 
@@ -29,6 +33,12 @@ export interface BaseReportNodeData {
   // For audit/tracking
   lastEditedBy?: string
   lastEditedAt?: string // ISO
+  // Metadata fields
+  status?: "draft" | "complete" | "in_review" | "approved"
+  assignedTo?: string // User ID
+  dueDate?: string // ISO date
+  tags?: string[]
+  collapsed?: boolean
 }
 
 // ===================== Section Nodes =====================
@@ -126,6 +136,71 @@ export interface MediaNodeData extends BaseReportNodeData {
   url: string // or file path
   caption?: string
   altText?: string
+  annotations?: MediaAnnotation[] // For photo annotation features
+}
+
+export interface MediaAnnotation {
+  id: string
+  x: number // percentage or pixel
+  y: number
+  text: string
+  type: "callout" | "arrow" | "highlight"
+}
+
+// ===================== Checklist Node =====================
+
+export interface ChecklistItem {
+  id: string
+  text: string
+  checked: boolean
+  comment?: string
+  photoUrl?: string
+}
+
+export interface ChecklistNodeData extends BaseReportNodeData {
+  nodeType: "checklist"
+  parentId: string
+  title: string
+  items: ChecklistItem[]
+  allowPhotos?: boolean
+}
+
+// ===================== Chart Node =========================
+
+export interface ChartNodeData extends BaseReportNodeData {
+  nodeType: "chart"
+  parentId: string
+  title?: string
+  chartType: "bar" | "line" | "pie" | "scatter" | "area"
+  dataSource?: string // CSV, JSON, or API endpoint
+  data?: any // Chart data
+  xAxisLabel?: string
+  yAxisLabel?: string
+}
+
+// ===================== Reference Node =====================
+
+export interface ReferenceNodeData extends BaseReportNodeData {
+  nodeType: "reference"
+  parentId: string
+  title: string
+  citation: string
+  url?: string
+  standard?: string // e.g., "ADA Title III", "IBC 2021"
+  pageNumber?: string
+}
+
+// ===================== Signature Node =====================
+
+export interface SignatureNodeData extends BaseReportNodeData {
+  nodeType: "signature"
+  parentId: string
+  title: string
+  signerName?: string
+  signerTitle?: string
+  signatureData?: string // Base64 image or SVG
+  signedAt?: string // ISO date
+  status: "pending" | "signed" | "rejected"
 }
 
 // ===================== Union for React Flow =================
@@ -138,6 +213,10 @@ export type ReportNodeData =
   | TableNodeData
   | DiagramNodeData
   | MediaNodeData
+  | ChecklistNodeData
+  | ChartNodeData
+  | ReferenceNodeData
+  | SignatureNodeData
 
 // React Flow node type
 import type { Node } from "reactflow"

@@ -25,9 +25,15 @@ export async function GET(
       position: { x: node.positionX, y: node.positionY },
       data: {
         ...JSON.parse(node.data || '{}'),
+        nodeType: node.type,
         linkedResourceIds: node.linkedResourceIds
           ? JSON.parse(node.linkedResourceIds)
           : [],
+        collapsed: node.collapsed || false,
+        status: node.status,
+        assignedTo: node.assignedTo,
+        dueDate: node.dueDate?.toISOString(),
+        metadata: node.metadata ? JSON.parse(node.metadata) : undefined,
       },
       parentNode: node.parentNodeId,
       order: node.order,
