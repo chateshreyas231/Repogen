@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { ResourcesPanel } from './graph/resources-panel'
 import { FlowCanvas } from './graph/flow-canvas'
 import { ReportPreview } from './graph/report-preview'
-import { OutlinePanel } from './graph/outline-panel'
 import type { Node } from 'reactflow'
 
 interface Report {
@@ -21,18 +20,14 @@ export function ReportGraphWorkspace({ reportId }: { reportId: string }) {
   const [resources, setResources] = useState<any[]>([])
   const [nodes, setNodes] = useState<Node[]>([])
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
-  const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   
   // Panel sizes
   const [leftPanelWidth, setLeftPanelWidth] = useState(280)
-  const [outlinePanelWidth, setOutlinePanelWidth] = useState(240)
   const [rightPanelWidth, setRightPanelWidth] = useState(384)
   const [isLeftMinimized, setIsLeftMinimized] = useState(false)
-  const [isOutlineMinimized, setIsOutlineMinimized] = useState(false)
   const [isResizingRight, setIsResizingRight] = useState(false)
   const [isResizingLeft, setIsResizingLeft] = useState(false)
-  const [isResizingOutline, setIsResizingOutline] = useState(false)
 
   useEffect(() => {
     fetchData()
@@ -64,9 +59,6 @@ export function ReportGraphWorkspace({ reportId }: { reportId: string }) {
       if (nodesRes.ok) {
         const nodesData = await nodesRes.json()
         setNodes(nodesData.nodes || [])
-        // Expand all nodes by default
-        const allNodeIds = new Set((nodesData.nodes || []).map((n: Node) => n.id))
-        setExpandedNodes(allNodeIds)
       }
     } catch (err) {
       console.error('Error fetching data:', err)
@@ -99,21 +91,14 @@ export function ReportGraphWorkspace({ reportId }: { reportId: string }) {
         const maxWidth = 600
         setLeftPanelWidth(Math.max(minWidth, Math.min(maxWidth, newWidth)))
       }
-      if (isResizingOutline) {
-        const newWidth = e.clientX - (isLeftMinimized ? 50 : leftPanelWidth)
-        const minWidth = 50
-        const maxWidth = 400
-        setOutlinePanelWidth(Math.max(minWidth, Math.min(maxWidth, newWidth)))
-      }
     }
 
     const handleMouseUp = () => {
       setIsResizingRight(false)
       setIsResizingLeft(false)
-      setIsResizingOutline(false)
     }
 
-    if (isResizingRight || isResizingLeft || isResizingOutline) {
+    if (isResizingRight || isResizingLeft) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
       document.body.style.cursor = 'col-resize'
@@ -126,7 +111,7 @@ export function ReportGraphWorkspace({ reportId }: { reportId: string }) {
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
     }
-  }, [isResizingRight, isResizingLeft, isResizingOutline, isLeftMinimized, leftPanelWidth])
+  }, [isResizingRight, isResizingLeft, isLeftMinimized, leftPanelWidth])
 
   if (loading) {
     return (
@@ -141,25 +126,12 @@ export function ReportGraphWorkspace({ reportId }: { reportId: string }) {
   }
 
   const effectiveLeftWidth = isLeftMinimized ? 50 : leftPanelWidth
-  const effectiveOutlineWidth = isOutlineMinimized ? 50 : outlinePanelWidth
 
   const handleNodeSelect = (nodeId: string) => {
     setSelectedNodeId(nodeId)
-    // Scroll to node in canvas (would need to be implemented in FlowCanvas)
     window.dispatchEvent(new CustomEvent('select-node', { detail: { nodeId } }))
   }
 
-  const handleNodeExpand = (nodeId: string) => {
-    setExpandedNodes((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(nodeId)) {
-        newSet.delete(nodeId)
-      } else {
-        newSet.add(nodeId)
-      }
-      return newSet
-    })
-  }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -188,32 +160,6 @@ export function ReportGraphWorkspace({ reportId }: { reportId: string }) {
         )}
       </div>
 
-      {/* Outline Panel - Navigation Tree (Resizable & Minimizable) */}
-      {!isLeftMinimized && (
-        <div
-          className="border-r bg-background overflow-hidden flex-shrink-0 transition-all duration-200 relative"
-          style={{ width: `${effectiveOutlineWidth}px` }}
-        >
-          <OutlinePanel
-            nodes={nodes}
-            selectedNodeId={selectedNodeId}
-            onNodeSelect={handleNodeSelect}
-            onNodeExpand={handleNodeExpand}
-            expandedNodes={expandedNodes}
-          />
-          {/* Outline resize handle */}
-          {!isOutlineMinimized && (
-            <div
-              className="absolute top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 transition-colors z-10"
-              style={{ right: '-2px' }}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                setIsResizingOutline(true)
-              }}
-            />
-          )}
-        </div>
-      )}
 
       {/* Center - React Flow Canvas */}
       <div className="flex-1 overflow-hidden bg-background relative">

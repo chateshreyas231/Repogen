@@ -105,12 +105,15 @@ export const SectionNode = memo(({ data, id, selected }: NodeProps) => {
 
   return (
     <div
-      className={`min-w-[300px] rounded-lg shadow-md transition-all duration-200 ${
-        selected ? 'ring-2 ring-primary ring-offset-2' : ''
+      className={`min-w-[300px] rounded-lg transition-all duration-200 ${
+        selected 
+          ? 'ring-2 ring-primary ring-offset-2 shadow-xl scale-105' 
+          : 'shadow-sm hover:shadow-lg hover:scale-[1.02]'
       }`}
       style={{
-        backgroundColor: isExpanded ? `${color}15` : `${color}20`,
-        border: `2px solid ${color}`,
+        backgroundColor: isExpanded ? '#ffffff' : `${color}08`,
+        border: `1.5px solid ${color}40`,
+        borderLeft: `4px solid ${color}`,
       }}
     >
       {/* Collapsed View */}
@@ -132,8 +135,12 @@ export const SectionNode = memo(({ data, id, selected }: NodeProps) => {
                 onChange={(e) => handleTitleChange(e.target.value)}
                 onClick={(e) => e.stopPropagation()}
                 placeholder="Section title"
-                className="font-bold border-none shadow-none p-0 h-auto text-base flex-1 bg-transparent"
-                style={{ color: getBorderColor(color) }}
+                className="font-semibold text-base tracking-tight border-none shadow-none p-0 h-auto flex-1 bg-transparent"
+                style={{ 
+                  color: getBorderColor(color),
+                  fontSize: '15px',
+                  fontWeight: 600,
+                }}
               />
             </div>
             <ChevronDown className="h-4 w-4" style={{ color: getBorderColor(color) }} />
@@ -155,8 +162,12 @@ export const SectionNode = memo(({ data, id, selected }: NodeProps) => {
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Section title"
-                className="font-bold border-none shadow-none p-0 h-auto text-base flex-1 bg-transparent"
-                style={{ color: getBorderColor(color) }}
+                className="font-semibold text-base tracking-tight border-none shadow-none p-0 h-auto flex-1 bg-transparent"
+                style={{ 
+                  color: getBorderColor(color),
+                  fontSize: '15px',
+                  fontWeight: 600,
+                }}
               />
             </div>
             <div className="flex items-center gap-2">

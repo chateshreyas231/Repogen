@@ -38,12 +38,15 @@ export const DiagramNode = memo(({ data, id, selected }: NodeProps) => {
 
   return (
     <div
-      className={`min-w-[300px] rounded-lg shadow-md transition-all duration-200 ${
-        selected ? 'ring-2 ring-primary ring-offset-2' : ''
+      className={`min-w-[300px] rounded-lg transition-all duration-200 ${
+        selected 
+          ? 'ring-2 ring-primary ring-offset-2 shadow-xl scale-105' 
+          : 'shadow-sm hover:shadow-lg hover:scale-[1.02]'
       }`}
       style={{
-        backgroundColor: isExpanded ? `${color}15` : `${color}20`,
-        border: `2px solid ${color}`,
+        backgroundColor: isExpanded ? '#ffffff' : `${color}08`,
+        border: `1.5px solid ${color}40`,
+        borderLeft: `4px solid ${color}`,
       }}
     >
       {!isExpanded ? (

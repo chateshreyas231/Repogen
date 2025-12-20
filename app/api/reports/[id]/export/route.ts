@@ -319,6 +319,91 @@ export async function GET(
             yPos += 5
           })
           yPos += 5
+        } else if (block.type === 'checklist' && block.checklist) {
+          pdf.setFontSize(12)
+          yPos += 8
+          pdf.text(block.checklist.title || 'Checklist', 20, yPos)
+          yPos += 5
+          block.checklist.items.forEach((item) => {
+            if (yPos > 280) {
+              pdf.addPage()
+              yPos = 20
+            }
+            pdf.text(`${item.checked ? '[x]' : '[ ]'} ${item.text}`, 25, yPos)
+            yPos += 7
+          })
+          yPos += 5
+        } else if (block.type === 'chart' && block.chart) {
+          pdf.setFontSize(12)
+          yPos += 8
+          pdf.text(block.chart.title || 'Chart', 20, yPos)
+          yPos += 5
+          if (yPos > 280) {
+            pdf.addPage()
+            yPos = 20
+          }
+          pdf.setFontSize(10)
+          pdf.text(`Chart Type: ${block.chart.chartType}`, 20, yPos)
+          yPos += 7
+          if (yPos > 280) {
+            pdf.addPage()
+            yPos = 20
+          }
+          pdf.text(`Data: ${JSON.stringify(block.chart.data).substring(0, 100)}...`, 20, yPos)
+          yPos += 7
+          yPos += 5
+        } else if (block.type === 'reference' && block.reference) {
+          pdf.setFontSize(12)
+          yPos += 8
+          pdf.text(block.reference.title || 'Reference', 20, yPos)
+          yPos += 5
+          if (yPos > 280) {
+            pdf.addPage()
+            yPos = 20
+          }
+          pdf.setFontSize(10)
+          pdf.text(block.reference.citationText, 20, yPos)
+          yPos += 7
+          if (block.reference.url) {
+            if (yPos > 280) {
+              pdf.addPage()
+              yPos = 20
+            }
+            pdf.text(`URL: ${block.reference.url}`, 20, yPos)
+            yPos += 7
+          }
+          yPos += 5
+        } else if (block.type === 'signature' && block.signature) {
+          pdf.setFontSize(12)
+          yPos += 8
+          pdf.text(block.signature.title || 'Approval Signature', 20, yPos)
+          yPos += 5
+          if (yPos > 280) {
+            pdf.addPage()
+            yPos = 20
+          }
+          pdf.setFontSize(10)
+          pdf.text(`Signer: ${block.signature.signerName || 'N/A'}`, 20, yPos)
+          yPos += 7
+          if (yPos > 280) {
+            pdf.addPage()
+            yPos = 20
+          }
+          pdf.text(`Title: ${block.signature.signerTitle || 'N/A'}`, 20, yPos)
+          yPos += 7
+          if (yPos > 280) {
+            pdf.addPage()
+            yPos = 20
+          }
+          pdf.text(`Date: ${block.signature.signatureDate || 'N/A'}`, 20, yPos)
+          yPos += 7
+          if (yPos > 280) {
+            pdf.addPage()
+            yPos = 20
+          }
+          pdf.text(`Status: ${block.signature.status}`, 20, yPos)
+          yPos += 7
+          yPos += 5
         }
       }
 

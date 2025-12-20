@@ -148,14 +148,18 @@ export function OutlinePanel({
   }
 
   return (
-    <div className="h-full flex flex-col border-r bg-muted/30">
-      <div className="p-4 border-b bg-background">
-        <h2 className="font-semibold text-lg">Outline</h2>
-        <p className="text-xs text-muted-foreground mt-1">
-          Navigate report structure
-        </p>
+    <div className="h-full flex flex-col bg-background">
+      <div className="p-4 border-b bg-muted/30 flex-shrink-0">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-semibold text-lg">Report Outline</h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Navigate report structure
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto p-2 min-h-0">
         {tree.rootNodes.length === 0 ? (
           <div className="text-sm text-muted-foreground p-4 text-center">
             No nodes yet. Add sections to build your report.

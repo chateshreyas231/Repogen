@@ -58,3 +58,132 @@
   }
 }
 
+/* React Flow Turbo Flow Theme */
+.react-flow {
+  background: linear-gradient(to bottom, #0a0a0a 0%, #1a1a1a 100%);
+}
+
+.react-flow__background {
+  opacity: 0.2;
+  color: #333;
+}
+
+.react-flow__background-pattern {
+  stroke: #333;
+}
+
+.react-flow__edge-path {
+  stroke-width: 2;
+  stroke: #6366f1;
+  filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.5));
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  stroke: #818cf8;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 4px rgba(129, 140, 248, 0.8));
+}
+
+.react-flow__edge-text {
+  fill: #a5b4fc;
+  font-size: 12px;
+}
+
+.react-flow__node {
+  cursor: grab;
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
+  transition: all 0.2s ease;
+}
+
+.react-flow__node:active {
+  cursor: grabbing;
+}
+
+.react-flow__node.selected {
+  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.6));
+}
+
+.react-flow__handle {
+  width: 10px;
+  height: 10px;
+  background: #6366f1;
+  border: 2px solid #0a0a0a;
+  border-radius: 50%;
+  opacity: 0;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 4px rgba(99, 102, 241, 0.6);
+}
+
+.react-flow__node:hover .react-flow__handle,
+.react-flow__handle.connecting {
+  opacity: 1;
+  transform: scale(1.2);
+}
+
+.react-flow__handle-connecting {
+  background: #818cf8;
+  box-shadow: 0 0 8px rgba(129, 140, 248, 1);
+}
+
+.react-flow__handle-valid {
+  background: #10b981;
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+}
+
+.react-flow__connection-line {
+  stroke: #6366f1;
+  stroke-width: 2;
+  stroke-dasharray: 5, 5;
+  filter: drop-shadow(0 0 2px rgba(99, 102, 241, 0.5));
+}
+
+.react-flow__controls {
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+}
+
+.react-flow__controls-button {
+  background: rgba(38, 38, 38, 0.8);
+  border: 1px solid #333;
+  color: #a5b4fc;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #333;
+}
+
+.react-flow__controls-button:hover {
+  background: rgba(99, 102, 241, 0.2);
+  color: #c7d2fe;
+  border-color: #6366f1;
+}
+
+.react-flow__controls-button:first-child {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  border-bottom: none;
+}
+
+.react-flow__minimap {
+  background: rgba(26, 26, 26, 0.9);
+  border: 1px solid #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.react-flow__minimap-mask {
+  fill: rgba(99, 102, 241, 0.2);
+  stroke: #6366f1;
+  stroke-width: 2;
+}
+
+.react-flow__panel {
+  color: #e5e7eb;
+}
+

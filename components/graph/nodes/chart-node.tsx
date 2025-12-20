@@ -60,10 +60,20 @@ export const ChartNode = memo(({ data, id, selected }: NodeProps) => {
 
   return (
     <Card
-      className={`min-w-[280px] ${selected ? 'ring-2 ring-primary' : ''}`}
-      style={{ borderColor: nodeColor, borderWidth: '2px' }}
+      className={`min-w-[280px] transition-all duration-200 ${
+        selected 
+          ? 'ring-2 ring-primary ring-offset-2 shadow-xl scale-105' 
+          : 'shadow-sm hover:shadow-lg hover:scale-[1.02]'
+      }`}
+      style={{ 
+        borderColor: `${nodeColor}40`, 
+        borderWidth: '1.5px',
+        borderLeftWidth: '4px',
+        borderLeftColor: nodeColor,
+        backgroundColor: isExpanded ? '#ffffff' : `${nodeColor}08`,
+      }}
     >
-      <CardHeader className="pb-2" style={{ backgroundColor: `${nodeColor}15` }}>
+      <CardHeader className="pb-2" style={{ backgroundColor: isExpanded ? '#ffffff' : `${nodeColor}08` }}>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setIsExpanded(!isExpanded)}

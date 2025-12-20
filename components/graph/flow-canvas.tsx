@@ -15,8 +15,11 @@ import ReactFlow, {
   Panel,
   useReactFlow,
   ReactFlowProvider,
+  MarkerType,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
+import { Button } from '@/components/ui/button'
+import { RefreshCw, Sparkles } from 'lucide-react'
 import { SectionNode } from './nodes/section-node'
 import { SubSectionNode } from './nodes/subsection-node'
 import { ContentNode } from './nodes/content-node'
@@ -30,6 +33,7 @@ import { ChartNode } from './nodes/chart-node'
 import { ReferenceNode } from './nodes/reference-node'
 import { SignatureNode } from './nodes/signature-node'
 import { NodeAddDialog } from './node-add-dialog'
+import { NodePalette } from './node-palette'
 
 const nodeTypes: NodeTypes = {
   section: SectionNode,
@@ -60,6 +64,7 @@ function FlowCanvasInner({
   const [nodes, setNodes, onNodesChange] = useNodesState([])
   const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [loading, setLoading] = useState(true)
+  const [draggedNodeType, setDraggedNodeType] = useState<string | null>(null)
   const reactFlowInstance = useReactFlow()
   const nodeIdToDeleteRef = useRef<string | null>(null)
 
@@ -144,7 +149,7 @@ function FlowCanvasInner({
         // Create End node if it doesn't exist
         if (!endNode) {
           const sortedNodes = [...fetchedNodes].sort((a: Node, b: Node) => 
-            (a.order ?? (a.data as any)?.order ?? 0) - (b.order ?? (b.data as any)?.order ?? 0)
+            ((a.data as any)?.order ?? 0) - ((b.data as any)?.order ?? 0)
           )
           const lastY = sortedNodes.length > 0 
             ? sortedNodes[sortedNodes.length - 1].position.y + 200
@@ -174,8 +179,8 @@ function FlowCanvasInner({
         const regularNodes = fetchedNodes
           .filter((n: Node) => n.type !== 'start' && n.type !== 'end')
           .sort((a: Node, b: Node) => {
-            const aOrder = a.order ?? (a.data as any)?.order ?? a.position.y
-            const bOrder = b.order ?? (b.data as any)?.order ?? b.position.y
+            const aOrder = (a.data as any)?.order ?? a.position.y
+            const bOrder = (b.data as any)?.order ?? b.position.y
             return aOrder - bOrder
           })
         
@@ -241,8 +246,8 @@ function FlowCanvasInner({
       const regularNodes = nodes
         .filter((n) => n.type !== 'start' && n.type !== 'end')
         .sort((a, b) => {
-          const aOrder = a.order ?? (a.data as any)?.order ?? a.position.y
-          const bOrder = b.order ?? (b.data as any)?.order ?? b.position.y
+          const aOrder = (a.data as any)?.order ?? a.position.y
+          const bOrder = (b.data as any)?.order ?? b.position.y
           return aOrder - bOrder
         })
       
@@ -333,8 +338,8 @@ function FlowCanvasInner({
 
   const onNodeDragStop = useCallback(
     (event: any, node: Node) => {
-      const centerX = 400
-      const verticalSpacing = 120
+      const centerX = 40
+      const verticalSpacing = 5
       
       // All nodes must stay in the vertical line
       let constrainedX = centerX
@@ -352,7 +357,7 @@ function FlowCanvasInner({
           const lastNode = sortedNodes[sortedNodes.length - 1]
           constrainedY = lastNode.position.y + verticalSpacing
         } else {
-          constrainedY = 150
+          constrainedY = 15
         }
       } else {
         // All regular nodes must stay in the vertical line
@@ -441,8 +446,8 @@ function FlowCanvasInner({
     parentNodeId: string | null = null
   ) => {
     try {
-      const centerX = 400 // All nodes in vertical line
-      const verticalSpacing = 120
+    const centerX = 400 // All nodes in vertical line
+    const verticalSpacing = 50 // Tight spacing for compact layout
       
       let newX = centerX
       let newY = 100
@@ -495,14 +500,18 @@ function FlowCanvasInner({
       
       newX = centerX
 
-      // Determine color based on type
+      // Professional color palette
       const colors: Record<string, string> = {
-        section: '#3b82f6',
-        sub_section: '#10b981',
-        table: '#f97316',
-        diagram: '#ef4444',
-        content: '#6b7280',
-        prompt: '#8b5cf6',
+        section: '#2563eb',      // Professional blue
+        sub_section: '#059669',   // Professional green
+        table: '#ea580c',         // Warm orange
+        diagram: '#dc2626',       // Alert red
+        content: '#64748b',       // Neutral gray
+        prompt: '#9333ea',        // Purple
+        checklist: '#16a34a',     // Success green
+        chart: '#0284c7',         // Sky blue
+        reference: '#7c3aed',      // Purple
+        signature: '#be123c',     // Deep red
       }
 
       const response = await fetch(`/api/reports/${reportId}/nodes`, {
@@ -544,7 +553,7 @@ function FlowCanvasInner({
       })
 
     const centerX = 400 // All nodes in this vertical line
-    const verticalSpacing = 120
+    const verticalSpacing = 50 // Tight spacing for compact layout
     let currentY = 150 // Start below Start node
 
     const updatedNodes = nodes.map((node) => {
@@ -572,6 +581,10 @@ function FlowCanvasInner({
       return {
         ...node,
         position: { x, y },
+        style: {
+          ...node.style,
+          transition: 'all 0.3s ease-out',
+        },
       }
     })
 
@@ -655,6 +668,20 @@ function FlowCanvasInner({
   const handleDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault()
+      
+      // Check if it's a node type from the palette
+      const nodeType = event.dataTransfer.getData('application/reactflow')
+      if (nodeType) {
+        const reactFlowBounds = (event.target as HTMLElement).getBoundingClientRect()
+        const position = reactFlowInstance.screenToFlowPosition({
+          x: event.clientX - reactFlowBounds.left,
+          y: event.clientY - reactFlowBounds.top,
+        })
+        handleAddNode(nodeType, position, null)
+        return
+      }
+      
+      // Otherwise, check if it's a resource
       const resourceId = event.dataTransfer.getData('resourceId')
       if (!resourceId) return
 
@@ -681,14 +708,18 @@ function FlowCanvasInner({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div>Loading canvas...</div>
+      <div className="flex items-center justify-center h-full bg-gradient-to-br from-gray-950 to-gray-900">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+          <div className="text-sm text-gray-400">Loading canvas...</div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="h-full w-full relative">
+    <div className="h-full w-full relative bg-gradient-to-br from-gray-950 to-gray-900">
+      <NodePalette onNodeDragStart={setDraggedNodeType} />
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -704,37 +735,76 @@ function FlowCanvasInner({
         fitView
         minZoom={0.1}
         maxZoom={2}
-        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
         nodesDraggable={true}
         nodesConnectable={true}
         elementsSelectable={true}
         deleteKeyCode="Delete"
         multiSelectionKeyCode="Shift"
         snapToGrid={true}
-        snapGrid={[20, 20]}
-        preventScrolling={false}
-        connectionLineStyle={{ stroke: '#6366f1', strokeWidth: 2 }}
-        defaultEdgeOptions={{ type: 'smoothstep', animated: false }}
+        snapGrid={[40, 40]}
+        preventScrolling={true}
+        panOnDrag={[1, 2]} // Enable pan on left and middle mouse button
+        panOnScroll={true}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={false}
+        selectionOnDrag={true}
+        connectionLineStyle={{ 
+          stroke: '#6366f1', 
+          strokeWidth: 2,
+          strokeDasharray: '5,5',
+        }}
+        defaultEdgeOptions={{ 
+          type: 'smoothstep', 
+          animated: false,
+          style: {
+            stroke: '#6366f1',
+            strokeWidth: 2,
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 20,
+            height: 20,
+            color: '#6366f1',
+          },
+        }}
         proOptions={{ hideAttribution: true }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} />
-        <Controls showInteractive={false} />
-        <Panel position="top-left" className="flex gap-2">
-          <NodeAddMenu onAddNode={handleAddNode} nodes={nodes} />
-          <button
-            onClick={handleRefreshLayout}
-            className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md shadow-lg hover:bg-secondary/90"
-            title="Arrange nodes sequentially"
-          >
-            ↻ Refresh Layout
-          </button>
-          <button
-            onClick={handleGenerateAll}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md shadow-lg hover:bg-primary/90"
-            title="Generate all sections"
-          >
-            Generate All
-          </button>
+        <Background 
+          variant={BackgroundVariant.Dots} 
+          gap={20} 
+          size={1}
+          color="#333"
+          className="opacity-30"
+        />
+        <Controls 
+          showInteractive={false}
+          className="!bg-gray-900/90 backdrop-blur-sm border border-gray-800 rounded-lg shadow-xl"
+        />
+        <Panel position="top-left" className="flex gap-2 p-2">
+          <div className="bg-gray-900/90 backdrop-blur-sm border border-gray-800 rounded-lg shadow-xl p-2 flex gap-2">
+            <NodeAddMenu onAddNode={handleAddNode} nodes={nodes} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRefreshLayout}
+              className="gap-2 shadow-sm"
+              title="Arrange nodes sequentially"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleGenerateAll}
+              className="gap-2 shadow-sm"
+              title="Generate all sections"
+            >
+              <Sparkles className="h-4 w-4" />
+              Generate All
+            </Button>
+          </div>
         </Panel>
       </ReactFlow>
     </div>
@@ -793,12 +863,13 @@ function NodeAddMenu({
   return (
     <>
       <div className="relative">
-        <button
+        <Button
           onClick={() => setShowMenu(!showMenu)}
-          className="px-4 py-2 bg-primary text-primary-foreground rounded-md shadow-lg hover:bg-primary/90"
+          size="sm"
+          className="shadow-sm"
         >
           + Add Node
-        </button>
+        </Button>
         {showMenu && (
           <div className="absolute top-full left-0 mt-2 w-56 bg-background border rounded-md shadow-lg z-20 max-h-96 overflow-y-auto">
             <div className="px-2 py-1 text-xs font-semibold text-muted-foreground uppercase">
